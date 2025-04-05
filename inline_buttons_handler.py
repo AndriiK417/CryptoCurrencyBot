@@ -4,6 +4,7 @@ from markups.currency_markup import currency_markup
 from markups.price_changes_markup import price_changes_markup
 from period_changes_handler import current_period  # нова змінна
 from commands_handler import skip_price, skip_currency
+import period_changes_handler
 
 API_TOKEN = '6388083417:AAFnoBZpLQkrrF95Bj9uq0nYma5EUt9qs1k'
 bot = telebot.TeleBot(API_TOKEN)
@@ -47,9 +48,9 @@ def handle_previous_price_button(call):
         skip_price -= 10
     resp = requests.get(BASE_URL, params={'start': skip_price, 'limit': 10})
     coins = resp.json().get('data', [])
-    key = period_map.get(current_period, 'percent_change_24h')
+    key = period_map.get(period_changes_handler.current_period, 'percent_change_24h')
     text = '\n'.join(
-        f"{c['name']} — {round(float(c['price_usd']), 3)}$"
+        f"{c['name']}: {round(float(c.get(key, 0)), 3)}% "
         for c in coins
     )
     bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=price_changes_markup)
@@ -59,9 +60,9 @@ def handle_next_price_button(call):
     skip_price += 10
     resp = requests.get(BASE_URL, params={'start': skip_price, 'limit': 10})
     coins = resp.json().get('data', [])
-    key = period_map.get(current_period, 'percent_change_24h')
+    key = period_map.get(period_changes_handler.current_period, 'percent_change_24h')
     text = '\n'.join(
-        f"{c['name']} — {round(float(c['price_usd']), 3)}$"
+        f"{c['name']}: {round(float(c.get(key, 0)), 3)}% "
         for c in coins
     )
     bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=price_changes_markup)
