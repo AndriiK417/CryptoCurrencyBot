@@ -8,27 +8,29 @@ from markups.period_markup import period_markup
 API_TOKEN = '6388083417:AAFnoBZpLQkrrF95Bj9uq0nYma5EUt9qs1k'
 bot = telebot.TeleBot(API_TOKEN)
 
-CURRENCY_API_LINK = 'https://api.coinstats.app/public/v1/coins?skip=0&limit=10&currency=USD'
-
-skip_price = 0
+# для пагінації: скільки пропустити
 skip_currency = 0
+skip_price = 0
+
+# Базовий URL CoinLore
+BASE_URL = 'https://api.coinlore.net/api/tickers/'
 
 def commands_handler(message):
-    global skip_currency
-    global skip_price
-
+    global skip_currency, skip_price
     skip_currency = 0
     skip_price = 0
 
     if message.chat.type == 'private':
         if message.text == 'Currency':
-            response = requests.get(CURRENCY_API_LINK).json()['coins']
-            response_message = ''
+            # ?start=0&limit=10
+            resp = requests.get(BASE_URL, params={'start': skip_currency, 'limit': 10})
+            coins = resp.json().get('data', [])
+            text = '\n'.join(
+                f"{c['name']} — {round(float(c['price_usd']), 3)}$"
+                for c in coins
+            )
 
-            for i in range(10):
-                response_message += response[i]['name'] + ' - ' + str(round(response[i]['price'], 3)) + '$ \n'
-                
-            bot.send_message(message.chat.id, response_message, reply_markup=currency_markup)
+            bot.send_message(message.chat.id, text, reply_markup=currency_markup)
 
         elif message.text == 'Price changes':
             bot.send_message(message.chat.id, "Choose period:", reply_markup=period_markup)
