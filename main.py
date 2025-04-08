@@ -42,4 +42,23 @@ def period_changes_wrapper(call):
 def charts_buttons_wrapper(call):
     charts_buttons_handler(call)
 
+@bot.callback_query_handler(func=lambda call: call.data.startswith('chart_'))
+def chart_period_handler(call):
+    # call.data виглядає як 'chart_BTCUSD_1h'
+    _, coin, period = call.data.split('_')
+    # period — '1h' або '1d' або '1w'
+    CHARTS_API_LINK = (
+        f'https://api.chart-img.com/v1/tradingview/mini-chart'
+        f'?key=qJX6lruQMB9Yhkj7ub87z3vrFa8z6hI13AgoaLdS'
+        f'&symbol=BINANCE:{coin}'
+        f'&width=600&height=400'
+        f'&interval={period}'
+        f'&theme=light'
+    )
+    resp = requests.get(CHARTS_API_LINK)
+    if resp.status_code == 200:
+        bot.send_photo(call.message.chat.id, resp.content)
+    else:
+        bot.send_message(call.message.chat.id, "Не вдалося завантажити графік. Спробуйте пізніше.")
+
 bot.polling(none_stop=True)
