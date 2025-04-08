@@ -4,7 +4,9 @@ from inline_buttons_handler import handle_next_currency_button, handle_next_pric
 from commands_handler import commands_handler
 from charts_buttons_handler import charts_buttons_handler
 from markups.markup import markup
-from period_changes_handler import period_changes_handler
+from period_changes_handler import period_changes_handler, chart_period_handler
+import requests
+
 
 API_TOKEN = '6388083417:AAFnoBZpLQkrrF95Bj9uq0nYma5EUt9qs1k'
 
@@ -45,22 +47,8 @@ def charts_buttons_wrapper(call):
 
 # 2) Обробник вибору періоду та відправки графіка
 @bot.callback_query_handler(func=lambda call: call.data.startswith('chart_'))
-def chart_period_handler(call):
-    # call.data виглядає як 'chart_BTCUSD_1h'
-    _, coin, period = call.data.split('_')
-    CHARTS_API_LINK = (
-        f'https://api.chart-img.com/v1/tradingview/mini-chart'
-        f'?key=qJX6lruQMB9Yhkj7ub87z3vrFa8z6hI13AgoaLdS'
-        f'&symbol=BINANCE:{coin}'
-        f'&width=600&height=400'
-        f'&interval={period}'
-        f'&theme=light'
-    )
-    resp = requests.get(CHARTS_API_LINK)
-    if resp.status_code == 200:
-        bot.send_photo(call.message.chat.id, resp.content)
-    else:
-        bot.send_message(call.message.chat.id, "Не вдалося завантажити графік. Спробуйте пізніше.")
+def chart_period_wrapper(call):
+    chart_period_handler(call)
 
 
 bot.polling(none_stop=True)
