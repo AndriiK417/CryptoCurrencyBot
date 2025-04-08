@@ -29,3 +29,22 @@ def period_changes_handler(call):
     )
 
     bot.send_message(call.message.chat.id, text, reply_markup=price_changes_markup)
+
+
+def chart_period_handler(call):
+    # call.data: 'chart_<COIN>_<INTERVAL>'
+    _, coin, interval = call.data.split('_', 2)
+    CHARTS_API_LINK = (
+        f'https://api.chart-img.com/v1/tradingview/mini-chart'
+        f'?key=qJX6lruQMB9Yhkj7ub87z3vrFa8z6hI13AgoaLdS'
+        f'&symbol=BINANCE:{coin}'
+        f'&width=600&height=400'
+        f'&interval={interval}'
+        f'&theme=light'
+    )
+    resp = requests.get(CHARTS_API_LINK)
+    if resp.status_code == 200:
+        bot.send_photo(call.message.chat.id, resp.content)
+    else:
+        bot.send_message(call.message.chat.id, "Не вдалося завантажити графік. Спробуйте пізніше.")
+
