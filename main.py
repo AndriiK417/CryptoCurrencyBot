@@ -6,7 +6,7 @@ from charts_buttons_handler import charts_buttons_handler
 from markups.markup import markup
 from period_changes_handler import period_changes_handler, chart_period_handler
 import requests
-from alerts_handler import show_alert_menu, start_add_alert, choose_coin, choose_direction, receive_threshold, choose_interval, list_alerts
+from alerts_handler import show_alert_menu, start_add_alert, choose_coin, choose_direction, receive_threshold, choose_interval, list_alerts, remove_alert
 from markups.alert_menu_markup      import alert_menu_markup
 import notifications_handler
 
@@ -19,10 +19,9 @@ def start(message):
     bot.send_message(message.chat.id, 'Hi, {0.first_name}'.format(message.from_user), reply_markup=markup)
 
 # 1) При натисканні кнопки Alerts
-@bot.message_handler(func=lambda m: m.text=='Alerts')
-def alerts_menu(message):
-    bot.send_message(message.chat.id,
-        "🔔 Alerts:", reply_markup=alert_menu_markup)
+@bot.message_handler(func=lambda m: m.text == 'Alerts')
+def cb_show_alert_menu(message):
+    show_alert_menu(message)
 
 # 2) Обробка меню Alerts
 @bot.callback_query_handler(func=lambda c: c.data=='alert_add')
