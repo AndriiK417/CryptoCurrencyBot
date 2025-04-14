@@ -1,18 +1,20 @@
+# alerts_handler.py
+
 import notifications_handler
 from notifications_handler import bot
-from markups.alert_menu_markup      import alert_menu_markup
-from markups.alert_coins_markup     import alert_coins_markup
-from markups.alert_direction_markup import alert_direction_markup
-from markups.alert_interval_markup  import alert_interval_markup
-from markups.alert_remove_markup import get_remove_alerts_markup
+from markups.alerts_markup import (
+    alert_menu_markup,
+    alert_coins_markup,
+    alert_direction_markup,
+    alert_interval_markup,
+    get_remove_alerts_markup
+)
 
 # Стан користувачів: chat_id → { step, coin, direction, threshold, interval }
 user_state = {}
 
 def show_alert_menu(message):
-    """
-    Показує головне меню Alerts: Add / List
-    """
+    """Показує головне меню Alerts: Add / List / Remove"""
     bot.send_message(
         message.chat.id,
         "🔔 Alerts menu:",
@@ -32,7 +34,7 @@ def start_add_alert(call):
 def choose_coin(call):
     """Крок 2: вибір напрямку (above/below)"""
     chat = call.message.chat.id
-    sym = call.data.split('_', 2)[2]  # з 'alert_coin_BTCUSD' отримаємо 'BTCUSD'
+    sym = call.data.split('_', 2)[2]  # 'alert_coin_BTCUSD'
     user_state[chat]['coin'] = sym
     user_state[chat]['step'] = 'direction'
     bot.send_message(
@@ -57,12 +59,12 @@ def receive_threshold(message):
     chat = message.chat.id
     state = user_state.get(chat)
     if not state or state.get('step') != 'threshold':
-        return False  # не наш випадок, пропускаємо
+        return False  # не наш випадок
     try:
         th = float(message.text)
     except ValueError:
         bot.send_message(chat, "❗ Please enter a valid number.")
-        return True  # обробили це повідомлення
+        return True  # оброблено
     state['threshold'] = th
     state['step'] = 'interval'
     bot.send_message(
@@ -70,7 +72,7 @@ def receive_threshold(message):
         "4️⃣ Choose check interval:",
         reply_markup=alert_interval_markup
     )
-    return True  # повідомлення оброблено
+    return True
 
 def choose_interval(call):
     """Крок 5: створення job-а"""
@@ -79,7 +81,7 @@ def choose_interval(call):
     interval = call.data.split('_')[2]  # 'hourly' або 'daily'
     state['interval'] = interval
 
-    job_id = notifications_handler.schedule_alert(
+    notifications_handler.schedule_alert(
         chat_id   = chat,
         symbol    = state['coin'],
         direction = state['direction'],
@@ -88,19 +90,16 @@ def choose_interval(call):
     )
     bot.send_message(
         chat,
-        f"✅ Alert set:\n"
+        "✅ Alert set:\n"
         f"{state['coin']} {state['direction']} {state['threshold']}$\n"
-        f"every {state['interval']}\n"
+        f"every {state['interval']}"
     )
     user_state.pop(chat, None)
 
-def list_alerts(call):
-    """Відобразити список alert-ів"""
-    notifications_handler.list_alerts(call.message)
-
-def remove_alert(call):
-    """Видалити alert за job_id"""
-    notifications_handler.remove_alert(call.message)
+def list_alerts(message):
+    """Виводить список alert-ів"""
+    # Передаємо message одразу в notifications_handler
+    notifications_handler.list_alerts(message)
 
 def start_remove_alert(call):
     """Крок 1: показати список сповіщень для видалення"""
@@ -116,8 +115,7 @@ def start_remove_alert(call):
         )
 
 def confirm_remove_alert(call):
-    """Крок 2: обробити натискання на конкретне сповіщення і видалити його"""
+    """Крок 2: обробити натискання і видалити alert"""
     chat = call.message.chat.id
     job_id = call.data[len('alert_rm_'):]
     notifications_handler.cancel_alert(chat, job_id)
-
