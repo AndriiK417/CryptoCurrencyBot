@@ -4,6 +4,7 @@ from markups.alert_menu_markup      import alert_menu_markup
 from markups.alert_coins_markup     import alert_coins_markup
 from markups.alert_direction_markup import alert_direction_markup
 from markups.alert_interval_markup  import alert_interval_markup
+from markups.alert_remove_markup import get_remove_alerts_markup
 
 # Стан користувачів: chat_id → { step, coin, direction, threshold, interval }
 user_state = {}
@@ -90,7 +91,6 @@ def choose_interval(call):
         f"✅ Alert set:\n"
         f"{state['coin']} {state['direction']} {state['threshold']}$\n"
         f"every {state['interval']}\n"
-        f"(job_id: {job_id})"
     )
     user_state.pop(chat, None)
 
@@ -101,3 +101,23 @@ def list_alerts(call):
 def remove_alert(call):
     """Видалити alert за job_id"""
     notifications_handler.remove_alert(call.message)
+
+def start_remove_alert(call):
+    """Крок 1: показати список сповіщень для видалення"""
+    chat = call.message.chat.id
+    markup = get_remove_alerts_markup(chat)
+    if not markup.keyboard:
+        bot.send_message(chat, "У вас немає активних сповіщень.")
+    else:
+        bot.send_message(
+            chat,
+            "❌ Виберіть сповіщення, яке хочете видалити:",
+            reply_markup=markup
+        )
+
+def confirm_remove_alert(call):
+    """Крок 2: обробити натискання на конкретне сповіщення і видалити його"""
+    chat = call.message.chat.id
+    job_id = call.data[len('alert_rm_'):]
+    notifications_handler.cancel_alert(chat, job_id)
+
