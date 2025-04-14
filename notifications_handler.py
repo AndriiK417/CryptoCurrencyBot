@@ -17,13 +17,27 @@ user_jobs = {}
 PRICE_API_URL = 'https://api.coinlore.net/api/tickers/'
 
 def fetch_price(symbol: str) -> float | None:
-    """Повертає поточну ціну symbol або None, якщо не знайдено."""
+    """
+    Повертає поточну ціну символу або None, якщо не знайдено.
+    Підтримує символи виду 'BTC', 'BTCUSD', 'BTCUSDT' тощо.
+    """
+    # 1) нормалізуємо символ до базового (без USD/USDT)
+    base = symbol.upper()
+    if base.endswith("USDT"):
+        base = base[:-4]
+    elif base.endswith("USD"):
+        base = base[:-3]
+
+    # 2) робимо запит
     resp = requests.get(PRICE_API_URL, params={'start': 0, 'limit': 100})
     data = resp.json().get('data', [])
+
+    # 3) шукаємо монету з символом base
     for c in data:
-        if c['symbol'].upper() == symbol.upper():
+        if c['symbol'].upper() == base:
             return float(c['price_usd'])
     return None
+
 
 def set_alert(message):
     """
