@@ -6,7 +6,7 @@ from charts_buttons_handler import charts_buttons_handler
 from markups.markup import markup
 from period_changes_handler import period_changes_handler, chart_period_handler
 import requests
-from alerts_handler import show_alert_menu, start_add_alert, choose_coin, choose_direction, receive_threshold, choose_interval, list_alerts, remove_alert
+from alerts_handler import show_alert_menu, start_add_alert, choose_coin, choose_direction, receive_threshold, choose_interval, list_alerts, start_remove_alert, confirm_remove_alert
 from markups.alert_menu_markup      import alert_menu_markup
 import notifications_handler
 
@@ -36,6 +36,16 @@ def cb_alert_coin(c): choose_coin(c)
 
 @bot.callback_query_handler(func=lambda c: c.data.startswith('alert_dir_'))
 def cb_alert_dir(c): choose_direction(c)
+
+# Remove Alert — перший клік
+@bot.callback_query_handler(func=lambda c: c.data == 'alert_remove')
+def cb_alert_remove(c):
+    start_remove_alert(c)
+
+# Видалити конкретний alert
+@bot.callback_query_handler(func=lambda c: c.data.startswith('alert_rm_'))
+def cb_alert_rm(c):
+    confirm_remove_alert(c)
 
 @bot.message_handler(func=receive_threshold)
 def mh_threshold(message):
