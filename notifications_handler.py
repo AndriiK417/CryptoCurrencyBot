@@ -97,12 +97,20 @@ def set_alert(message):
     )
 
 def list_alerts(message):
-    """Виводить список активних сповіщень для користувача."""
+    """Виводить список активних сповіщень дружнім текстом."""
     jobs = user_jobs.get(message.chat.id, [])
     if not jobs:
         bot.send_message(message.chat.id, "У вас немає активних сповіщень.")
         return
-    text = "Ваші сповіщення:\n" + "\n".join(f"- {jid}" for jid in jobs)
+    lines = []
+    for job_id in jobs:
+        parts = job_id.split('_', 5)
+        if len(parts) == 6:
+            _, _, symbol, direction, threshold, _ = parts
+            lines.append(f"- {symbol} {direction} {threshold}$")
+        else:
+            lines.append(f"- {job_id}")
+    text = "Ваші сповіщення:\n" + "\n".join(lines)
     bot.send_message(message.chat.id, text)
 
 def remove_alert(message):
@@ -151,3 +159,23 @@ def schedule_alert(chat_id, symbol, direction, threshold, interval):
 
     user_jobs.setdefault(chat_id, []).append(job_id)
     return job_id
+
+def cancel_alert(chat_id: int, job_id: str):
+    """
+    Видаляє сповіщення за job_id та надсилає дружнє підтвердження.
+    """
+    try:
+        scheduler.remove_job(job_id)
+        user_jobs.get(chat_id, []).remove(job_id)
+        parts = job_id.split('_', 5)
+        if len(parts) == 6:
+            _, _, symbol, direction, threshold, _ = parts
+            bot.send_message(
+                chat_id,
+                f"🗑️ Alert removed: {symbol} {direction} {threshold}$"
+            )
+        else:
+            bot.send_message(chat_id, f"🗑️ Alert {job_id} removed.")
+    except Exception:
+        bot.send_message(chat_id, "⚠️ Не вдалося видалити сповіщення.")
+
