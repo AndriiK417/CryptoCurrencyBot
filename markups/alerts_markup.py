@@ -32,6 +32,7 @@ alert_direction_markup.add(
 # 4) Вибір інтервалу
 alert_interval_markup = types.InlineKeyboardMarkup(row_width=2)
 alert_interval_markup.add(
+    types.InlineKeyboardButton('1 minute', callback_data='alert_int_minutely'),
     types.InlineKeyboardButton('🕒 Hourly', callback_data='alert_int_hourly'),
     types.InlineKeyboardButton('📅 Daily',  callback_data='alert_int_daily'),
 )
