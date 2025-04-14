@@ -152,9 +152,11 @@ def schedule_alert(chat_id, symbol, direction, threshold, interval):
                 f"{'above' if direction=='above' else 'below'} {threshold}$"
             )
     # розклад
-    if interval=='hourly':
+    if interval == 'minutely':
+        scheduler.add_job(job_func, 'interval', minutes=1, id=job_id)
+    elif interval == 'hourly':
         scheduler.add_job(job_func, 'interval', hours=1, id=job_id)
-    else:
+    else:  # daily
         scheduler.add_job(job_func, 'interval', days=1, id=job_id)
 
     user_jobs.setdefault(chat_id, []).append(job_id)
