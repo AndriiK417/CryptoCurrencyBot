@@ -79,6 +79,8 @@ def receive_threshold(message):
     except ValueError:
         bot.send_message(chat, "❗ Please enter a valid number.")
         return True
+    # видаляємо повідомлення користувача з порогом
+    bot.delete_message(chat_id=chat, message_id=message.message_id)
     state.update({'threshold': th, 'step': 'interval'})
     msg_id = state.get('message_id')
     bot.edit_message_text(
