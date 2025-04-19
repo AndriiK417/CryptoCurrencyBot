@@ -1,5 +1,6 @@
 import telebot
 import requests
+from notifications_handler import bot
 from markups.price_changes_markup import price_changes_markup
 
 API_TOKEN = '6388083417:AAFnoBZpLQkrrF95Bj9uq0nYma5EUt9qs1k'
@@ -18,17 +19,28 @@ period_map = {
 }
 
 def period_changes_handler(call):
-    global current_period
-    current_period = call.data  # наприклад, 'priceChange1d'
+    """
+    Замість send_message — редагуємо вихідне "Choose period" повідомлення
+    на список змін цін + пагінацію.
+    """
+    chat_id    = call.message.chat.id
+    message_id = call.message.message_id
+    period = call.data  # наприклад 'priceChange1d'
+
     resp = requests.get(BASE_URL, params={'start': 0, 'limit': 10})
     coins = resp.json().get('data', [])
-    key = period_map.get(current_period, 'percent_change_24h')
+    key = period_map.get(period, 'percent_change_24h')
     text = '\n'.join(
         f"{c['name']}: {round(float(c.get(key, 0)), 3)}% "
         for c in coins
     )
 
-    bot.send_message(call.message.chat.id, text, reply_markup=price_changes_markup)
+    bot.edit_message_text(
+        text=text,
+        chat_id=chat_id,
+        message_id=message_id,
+        reply_markup=price_changes_markup
+    )
 
 
 def chart_period_handler(call):
