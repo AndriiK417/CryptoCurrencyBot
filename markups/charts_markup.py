@@ -1,5 +1,6 @@
 from telebot import types
 
+# 1) Меню вибору монети для графіка
 charts_markup = types.InlineKeyboardMarkup()
 # тепер callback_data починається з selectchart_
 variant1  = types.InlineKeyboardButton('Bitcoin',               callback_data='selectchart_BTCUSD')
@@ -17,3 +18,18 @@ charts_markup.add(
     variant1, variant2, variant3, variant4, variant5,
     variant6, variant7, variant8, variant9, variant10
 )
+
+# 2) Функція для меню вибору періоду
+def get_chart_period_markup(coin: str) -> types.InlineKeyboardMarkup:
+    """
+    Повертає InlineKeyboardMarkup з кнопками для вибору періоду графіка:
+    1D, 1M, 3M, 1Y
+    """
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    markup.add(
+        types.InlineKeyboardButton('1 день',   callback_data=f'chart_{coin}_1D'),
+        types.InlineKeyboardButton('1 місяць', callback_data=f'chart_{coin}_1M'),
+        types.InlineKeyboardButton('3 місяці', callback_data=f'chart_{coin}_3M'),
+        types.InlineKeyboardButton('1 рік',     callback_data=f'chart_{coin}_1Y'),
+    )
+    return markup
