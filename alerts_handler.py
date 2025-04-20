@@ -126,11 +126,13 @@ def list_alerts(call):
     msg_id = call.message.message_id
     jobs = user_jobs.get(chat, [])
     if not jobs:
+        back = types.InlineKeyboardMarkup()
+        back.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_menu'))
         bot.edit_message_text(
             "У вас немає активних сповіщень.",
             chat_id=chat,
             message_id=msg_id,
-            reply_markup=None
+            reply_markup=back
         )
         return
     lines = []
@@ -142,31 +144,40 @@ def list_alerts(call):
         else:
             lines.append(f"- {job_id}")
     text = "Ваші сповіщення:\n" + "\n".join(lines)
+    back = types.InlineKeyboardMarkup()
+    back.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_menu'))
     bot.edit_message_text(
         text,
         chat_id=chat,
         message_id=msg_id,
-        reply_markup=None
+        reply_markup=back
     )
 
 
 def start_remove_alert(call):
-    """Крок 1: показати меню видалення у тому ж повідомленні"""
+    """Крок 1: показати список сповіщень для видалення або повідомити, що їх немає."""
     chat = call.message.chat.id
     msg_id = call.message.message_id
-    markup = get_remove_alerts_markup(chat)
-    if not markup.keyboard:
+
+    # дістаємо список сповіщень
+    jobs = notifications_handler.user_jobs.get(chat, [])
+
+    if not jobs:
+        # Немає жодного сповіщення — редагуємо повідомлення з текстом і кнопкою Назад
         back = types.InlineKeyboardMarkup()
         back.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_menu'))
+
         bot.edit_message_text(
             "У вас немає активних сповіщень.",
             chat_id=chat,
             message_id=msg_id,
-            reply_markup=None
+            reply_markup=back
         )
     else:
+        # Є сповіщення — показуємо список на видалення
+        markup = get_remove_alerts_markup(chat)
         bot.edit_message_text(
-            "❌ Виберіть сповіщення для видалення:",
+            "❌ Виберіть, яке сповіщення видалити:",
             chat_id=chat,
             message_id=msg_id,
             reply_markup=markup
@@ -188,7 +199,7 @@ def confirm_remove_alert(call):
 def back_to_menu(call):
     chat = call.message.chat.id
     msg_id = call.message.message_id
-    user_state[chat]['step'] = None
+    user_state[chat]['step'] = 'menu'
     bot.edit_message_text(
         "🔔 Alerts menu:",
         chat_id=chat,
@@ -222,8 +233,8 @@ def back_to_direction(call):
     """Повернення до вибору direction (After coin selected)"""
     chat = call.message.chat.id
     msg_id = call.message.message_id
-    state = user_state.get(chat, {})
-
+    # user_state[chat]['step'] = 'direction'
+    state = user_state.get(chat)
     coin = state.get('coin', 'your coin')
     # Заново показати вибір direction
     bot.edit_message_text(
