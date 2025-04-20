@@ -1,9 +1,11 @@
+from telebot import types
 import notifications_handler
 from notifications_handler import bot, user_jobs
 from markups.alerts_markup import (
     alert_menu_markup,
     alert_coins_markup,
     alert_direction_markup,
+    alert_threshold_markup,
     alert_interval_markup,
     get_remove_alerts_markup
 )
@@ -64,7 +66,7 @@ def choose_direction(call):
         "3️⃣ Enter threshold price in USD (e.g. 70000):",
         chat_id=chat,
         message_id=msg_id,
-        reply_markup=None
+        reply_markup=alert_threshold_markup
     )
 
 
@@ -154,6 +156,8 @@ def start_remove_alert(call):
     msg_id = call.message.message_id
     markup = get_remove_alerts_markup(chat)
     if not markup.keyboard:
+        back = types.InlineKeyboardMarkup()
+        back.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_menu'))
         bot.edit_message_text(
             "У вас немає активних сповіщень.",
             chat_id=chat,
@@ -180,3 +184,53 @@ def confirm_remove_alert(call):
         message_id=msg_id,
         reply_markup=None
     )
+
+def back_to_menu(call):
+    chat = call.message.chat.id
+    msg_id = call.message.message_id
+    user_state[chat]['step'] = None
+    bot.edit_message_text(
+        "🔔 Alerts menu:",
+        chat_id=chat,
+        message_id=msg_id,
+        reply_markup=alert_menu_markup
+    )
+
+def back_to_coin(call):
+    chat = call.message.chat.id
+    msg_id = call.message.message_id
+    user_state[chat]['step'] = 'coin'
+    bot.edit_message_text(
+        "1️⃣ Choose coin for alert:",
+        chat_id=chat,
+        message_id=msg_id,
+        reply_markup=alert_coins_markup
+    )
+
+def back_to_threshold(call):
+    chat = call.message.chat.id
+    msg_id = call.message.message_id
+    user_state[chat]['step'] = 'threshold'
+    bot.edit_message_text(
+        "3️⃣ Enter threshold price in USD (e.g. 70000):",
+        chat_id=chat,
+        message_id=msg_id,
+        reply_markup=alert_threshold_markup
+    )
+
+def back_to_direction(call):
+    """Повернення до вибору direction (After coin selected)"""
+    chat = call.message.chat.id
+    msg_id = call.message.message_id
+    state = user_state.get(chat, {})
+
+    coin = state.get('coin', 'your coin')
+    # Заново показати вибір direction
+    bot.edit_message_text(
+        f"2️⃣ {coin}: Above or Below?",
+        chat_id=chat,
+        message_id=msg_id,
+        reply_markup=alert_direction_markup
+    )
+    # state['step'] = 'direction'
+
