@@ -21,6 +21,7 @@ alert_coins_markup.add(
     *[types.InlineKeyboardButton(name, callback_data=f'alert_coin_{sym}')
       for name,sym in coins]
 )
+alert_coins_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_menu'))
 
 # 3) Вибір напрямку
 alert_direction_markup = types.InlineKeyboardMarkup(row_width=2)
@@ -28,14 +29,20 @@ alert_direction_markup.add(
     types.InlineKeyboardButton('🔼 Above', callback_data='alert_dir_above'),
     types.InlineKeyboardButton('🔽 Below', callback_data='alert_dir_below'),
 )
+alert_direction_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_coin'))
+
+# Вибір threshold
+alert_threshold_markup = types.InlineKeyboardMarkup(row_width=2)
+alert_threshold_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_direction'))
 
 # 4) Вибір інтервалу
 alert_interval_markup = types.InlineKeyboardMarkup(row_width=2)
 alert_interval_markup.add(
     types.InlineKeyboardButton('1 minute', callback_data='alert_int_minutely'),
-    types.InlineKeyboardButton('🕒 Hourly', callback_data='alert_int_hourly'),
-    types.InlineKeyboardButton('📅 Daily',  callback_data='alert_int_daily'),
+    types.InlineKeyboardButton('1 Hour', callback_data='alert_int_hourly'),
+    types.InlineKeyboardButton('1 Day',  callback_data='alert_int_daily'),
 )
+alert_interval_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_threshold'))
 
 # 5) Меню видалення alert-ів
 def get_remove_alerts_markup(chat_id: int) -> types.InlineKeyboardMarkup:
@@ -55,4 +62,6 @@ def get_remove_alerts_markup(chat_id: int) -> types.InlineKeyboardMarkup:
         markup.add(
             types.InlineKeyboardButton(label, callback_data=f'alert_rm_{job_id}')
         )
+    markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_menu'))
     return markup
+
