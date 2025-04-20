@@ -47,12 +47,7 @@ def cb_alert_list(c):
 
 @bot.callback_query_handler(func=lambda c: c.data == 'alert_remove')
 def cb_alert_remove(c):
-    chat = c.message.chat.id
-    markup = get_remove_alerts_markup(chat)
-    if not markup.keyboard:
-        bot.send_message(chat, "У вас немає активних сповіщень.")
-    else:
-        bot.send_message(chat, "❌ Виберіть сповіщення для видалення:", reply_markup=markup)
+    start_remove_alert(c)
 
 @bot.callback_query_handler(func=lambda c: c.data.startswith('alert_rm_'))
 def cb_alert_rm(c):
