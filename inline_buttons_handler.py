@@ -5,6 +5,8 @@ from markups.price_changes_markup import price_changes_markup
 from period_changes_handler import current_period  # нова змінна
 from commands_handler import skip_price, skip_currency
 import period_changes_handler
+from markups.charts_markup import charts_markup, get_chart_period_markup
+from markups.period_markup import period_markup
 
 API_TOKEN = '6388083417:AAFnoBZpLQkrrF95Bj9uq0nYma5EUt9qs1k'
 bot = telebot.TeleBot(API_TOKEN)
@@ -66,3 +68,22 @@ def handle_next_price_button(call):
         for c in coins
     )
     bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=price_changes_markup)
+
+def handle_charts_back_to_coin(call, bot, charts_markup):
+    bot.edit_message_text(
+        "Choose the crypto-chart you need:",
+        chat_id=call.message.chat.id,
+        message_id=call.message.message_id,
+        reply_markup=charts_markup
+    )
+
+# Для Price Changes:
+def handle_price_back_to_period(call, bot, period_markup):
+    # того ж message, просто повернути клавіатуру price_changes_markup?
+    bot.edit_message_text(
+        "Choose period:",
+        chat_id=call.message.chat.id,
+        message_id=call.message.message_id,
+        reply_markup=period_markup
+    )
+
