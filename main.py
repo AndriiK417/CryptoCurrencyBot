@@ -6,7 +6,7 @@ from charts_buttons_handler import charts_buttons_handler
 from markups.markup import markup
 from period_changes_handler import period_changes_handler, chart_period_handler
 import requests
-from alerts_handler import show_alert_menu, start_add_alert, choose_coin, choose_direction, receive_threshold, choose_interval, list_alerts, start_remove_alert, confirm_remove_alert
+from alerts_handler import show_alert_menu, start_add_alert, choose_coin, choose_direction, receive_threshold, choose_interval, list_alerts, start_remove_alert, confirm_remove_alert, back_to_menu, back_to_coin, back_to_threshold, back_to_direction
 from markups.alerts_markup import (
     alert_menu_markup,
     alert_coins_markup,
@@ -15,6 +15,13 @@ from markups.alerts_markup import (
     get_remove_alerts_markup
 )
 import notifications_handler
+from inline_buttons_handler import (
+    handle_charts_back_to_coin,
+    handle_price_back_to_period,
+)
+from markups.charts_markup import charts_markup, get_chart_period_markup
+from markups.period_markup    import period_markup
+from markups.price_changes_markup import price_changes_markup
 
 API_TOKEN = '6388083417:AAFnoBZpLQkrrF95Bj9uq0nYma5EUt9qs1k'
 
@@ -36,7 +43,7 @@ def cb_alert_add(c):
 
 @bot.callback_query_handler(func=lambda c: c.data == 'alert_list')
 def cb_alert_list(c):
-    list_alerts(c.message)    # виводить список
+    list_alerts(c)    # виводить список
 
 @bot.callback_query_handler(func=lambda c: c.data == 'alert_remove')
 def cb_alert_remove(c):
@@ -105,7 +112,29 @@ def charts_buttons_wrapper(call):
 def chart_period_wrapper(call):
     chart_period_handler(call)
 
+# Кнопки "Назад"
 
+@bot.callback_query_handler(func=lambda c: c.data=='alert_back_to_menu')
+def cb_alert_back_menu(c): back_to_menu(c)
+
+@bot.callback_query_handler(func=lambda c: c.data=='alert_back_to_coin')
+def cb_alert_back_coin(c): back_to_coin(c)
+
+@bot.callback_query_handler(func=lambda c: c.data=='alert_back_to_threshold')
+def cb_alert_back_threshold(c): back_to_threshold(c)
+
+@bot.callback_query_handler(func=lambda c: c.data == 'alert_back_to_direction')
+def cb_alert_back_direction(c): back_to_direction(c)
+
+# Charts: назад до вибору монети
+@bot.callback_query_handler(func=lambda c: c.data.startswith('charts_back_to_coin_'))
+def cb_charts_back_coin(c):
+    handle_charts_back_to_coin(c, bot, charts_markup)
+
+# Price changes: назад до вибору періоду
+@bot.callback_query_handler(func=lambda c: c.data == 'price_back_to_period')
+def cb_price_back_period(c):
+    handle_price_back_to_period(c, bot, period_markup)
 
 bot.remove_webhook()
 
