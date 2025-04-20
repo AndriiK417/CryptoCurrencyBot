@@ -32,4 +32,5 @@ def get_chart_period_markup(coin: str) -> types.InlineKeyboardMarkup:
         types.InlineKeyboardButton('3 місяці', callback_data=f'chart_{coin}_3M'),
         types.InlineKeyboardButton('1 рік',     callback_data=f'chart_{coin}_1Y'),
     )
+    markup.add(types.InlineKeyboardButton('« Назад', callback_data=f'charts_back_to_coin_{coin}'))
     return markup
