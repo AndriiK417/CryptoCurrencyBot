@@ -1,25 +1,14 @@
 import telebot
 from telebot import types
-from inline_buttons_handler import handle_next_currency_button, handle_next_price_button, handle_previous_currency_button, handle_previous_price_button
+from inline_buttons_handler import handle_next_currency_button, handle_next_price_button, handle_previous_currency_button, handle_previous_price_button, handle_charts_back_to_coin, handle_price_back_to_period
+from markups.charts_markup import charts_markup
 from commands_handler import commands_handler
 from charts_buttons_handler import charts_buttons_handler
 from markups.markup import markup
 from period_changes_handler import period_changes_handler, chart_period_handler
 import requests
 from alerts_handler import show_alert_menu, start_add_alert, choose_coin, choose_direction, receive_threshold, choose_interval, list_alerts, start_remove_alert, confirm_remove_alert, back_to_menu, back_to_coin, back_to_threshold, back_to_direction
-from markups.alerts_markup import (
-    alert_menu_markup,
-    alert_coins_markup,
-    alert_direction_markup,
-    alert_interval_markup,
-    get_remove_alerts_markup
-)
 import notifications_handler
-from inline_buttons_handler import (
-    handle_charts_back_to_coin,
-    handle_price_back_to_period,
-)
-from markups.charts_markup import charts_markup, get_chart_period_markup
 from markups.period_markup    import period_markup
 from markups.price_changes_markup import price_changes_markup
 
@@ -30,53 +19,7 @@ bot = telebot.TeleBot(API_TOKEN)
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.send_message(message.chat.id, 'Hi, {0.first_name}'.format(message.from_user), reply_markup=markup)
-
-# 1) Кнопка в основному меню "Alerts"
-@bot.message_handler(func=lambda m: m.text == 'Alerts')
-def cb_show_alert_menu(message):
-    show_alert_menu(message)  # надсилає alert_menu_markup
-
-# 2) Обробка головного меню Alerts
-@bot.callback_query_handler(func=lambda c: c.data == 'alert_add')
-def cb_alert_add(c):
-    start_add_alert(c)        # крок 1: показує "Choose coin for alert"
-
-@bot.callback_query_handler(func=lambda c: c.data == 'alert_list')
-def cb_alert_list(c):
-    list_alerts(c)    # виводить список
-
-@bot.callback_query_handler(func=lambda c: c.data == 'alert_remove')
-def cb_alert_remove(c):
-    start_remove_alert(c)
-
-@bot.callback_query_handler(func=lambda c: c.data.startswith('alert_rm_'))
-def cb_alert_rm(c):
-    confirm_remove_alert(c)
-
-# 3) Кроки створення нового alert  
-#   a) вибір монети
-@bot.callback_query_handler(func=lambda c: c.data.startswith('alert_coin_'))
-def cb_alert_coin(c):
-    choose_coin(c)
-
-#   b) вибір напрямку (above/below)
-@bot.callback_query_handler(func=lambda c: c.data.startswith('alert_dir_'))
-def cb_alert_dir(c):
-    choose_direction(c)
-
-#   c) введення порогу (threshold) — обробляється через message_handler
-
-@bot.message_handler(func=receive_threshold)
-def mh_threshold(message):
-    pass  # receive_threshold обробить
-
-@bot.callback_query_handler(func=lambda c: c.data.startswith('alert_int_'))
-def cb_alert_int(c): choose_interval(c)
-
-@bot.message_handler(content_types='text')
-def commands_wrapper(message):
-    commands_handler(message)
-            
+          
 @bot.callback_query_handler(func=lambda call: call.data.startswith('previous_currency'))
 def previous_currency_wrapper(call):
     handle_previous_currency_button(call)
@@ -107,29 +50,82 @@ def charts_buttons_wrapper(call):
 def chart_period_wrapper(call):
     chart_period_handler(call)
 
+# Alerts
+
+# 1) Кнопка в основному меню "Alerts"
+@bot.message_handler(func=lambda m: m.text == 'Alerts')
+def show_alert_wrapper(message):
+    show_alert_menu(message)  # надсилає alert_menu_markup
+
+# 2) Обробка головного меню Alerts
+@bot.callback_query_handler(func=lambda c: c.data == 'alert_add')
+def add_alert_wrapper(c):
+    start_add_alert(c)        # крок 1: показує "Choose coin for alert"
+
+@bot.callback_query_handler(func=lambda c: c.data == 'alert_list')
+def alert_list_wrapper(c):
+    list_alerts(c)    # виводить список
+
+@bot.callback_query_handler(func=lambda c: c.data == 'alert_remove')
+def remove_alert_wrapper(c):
+    start_remove_alert(c)
+
+@bot.callback_query_handler(func=lambda c: c.data.startswith('alert_rm_'))
+def confirm_remove_alert_wrapper(c):
+    confirm_remove_alert(c)
+
+# 3) Кроки створення нового alert  
+#   a) вибір монети
+@bot.callback_query_handler(func=lambda c: c.data.startswith('alert_coin_'))
+def alert_coin_wrapper(c):
+    choose_coin(c)
+
+#   b) вибір напрямку (above/below)
+@bot.callback_query_handler(func=lambda c: c.data.startswith('alert_dir_'))
+def alert_direction_wrapper(c):
+    choose_direction(c)
+
+#   c) введення порогу (threshold) — обробляється через message_handler
+
+@bot.message_handler(func=receive_threshold)
+def threshold_wrapper(message):
+    pass  # receive_threshold обробить
+
+@bot.callback_query_handler(func=lambda c: c.data.startswith('alert_int_'))
+def alert_interval_wrapper(c):
+    choose_interval(c)
+
 # Кнопки "Назад"
 
 @bot.callback_query_handler(func=lambda c: c.data=='alert_back_to_menu')
-def cb_alert_back_menu(c): back_to_menu(c)
+def alert_back_menu_wrapper(c):
+    back_to_menu(c)
 
 @bot.callback_query_handler(func=lambda c: c.data=='alert_back_to_coin')
-def cb_alert_back_coin(c): back_to_coin(c)
+def alert_back_coin_wrapper(c):
+    back_to_coin(c)
 
 @bot.callback_query_handler(func=lambda c: c.data=='alert_back_to_threshold')
-def cb_alert_back_threshold(c): back_to_threshold(c)
+def alert_back_threshold_wrapper(c):
+    back_to_threshold(c)
 
 @bot.callback_query_handler(func=lambda c: c.data == 'alert_back_to_direction')
-def cb_alert_back_direction(c): back_to_direction(c)
+def alert_back_direction_wrapper(c):
+    back_to_direction(c)
 
 # Charts: назад до вибору монети
 @bot.callback_query_handler(func=lambda c: c.data.startswith('charts_back_to_coin_'))
-def cb_charts_back_coin(c):
+def charts_back_coin_wrapper(c):
     handle_charts_back_to_coin(c, bot, charts_markup)
 
 # Price changes: назад до вибору періоду
 @bot.callback_query_handler(func=lambda c: c.data == 'price_back_to_period')
-def cb_price_back_period(c):
+def price_back_period_wrapper(c):
     handle_price_back_to_period(c, bot, period_markup)
+
+@bot.message_handler(content_types='text')
+def commands_wrapper(message):
+    commands_handler(message)
 
 bot.remove_webhook()
 
