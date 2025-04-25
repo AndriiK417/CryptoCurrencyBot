@@ -21,8 +21,8 @@ CHARTS_KEY = 'qJX6lruQMB9Yhkj7ub87z3vrFa8z6hI13AgoaLdS'
 
 def coin_info_handler(call: types.CallbackQuery):
     chat_id    = call.message.chat.id
-    message_id = call.message.message_id
-    sym        = call.data.split('_',1)[1]   # напр. 'BTC'
+    msg_id     = call.message.message_id
+    sym        = call.data.split('_', 1)[1]   # наприклад 'BTC'
     cid        = COIN_LORE_IDS.get(sym)
     if not cid:
         bot.answer_callback_query(call.id, "Не знайдено монету.")
@@ -31,9 +31,6 @@ def coin_info_handler(call: types.CallbackQuery):
     # 1) Дані з CoinLore
     url  = f'https://api.coinlore.net/api/ticker/?id={cid}'
     resp = requests.get(url)
-    if resp.status_code != 200:
-        bot.answer_callback_query(call.id, "Помилка API.")
-        return
     data = resp.json()[0]
     price  = data['price_usd']
     ch24   = data.get('percent_change_24h', 0)
@@ -41,7 +38,6 @@ def coin_info_handler(call: types.CallbackQuery):
     vol24  = data.get('volume24', '—')
 
     # 2) Графік за 1 день через Chart-Img
-    CHARTS_KEY = 'qJX6lruQMB9Yhkj7ub87z3vrFa8z6hI13AgoaLdS'
     chart_url = (
         f'https://api.chart-img.com/v1/tradingview/mini-chart'
         f'?key={CHARTS_KEY}'
@@ -59,10 +55,17 @@ def coin_info_handler(call: types.CallbackQuery):
         f"🔄 24h Volume: {vol24}$"
     )
 
-    # 4) Редагуємо поточне повідомлення, вставляючи картинку + підпис
+    # 4) Створюємо клавіатуру «Назад»
+    back_markup = types.InlineKeyboardMarkup()
+    back_markup.add(
+        types.InlineKeyboardButton('« Назад', callback_data='coin_back_to_menu')
+    )
+
+    # 5) Редагуємо те саме повідомлення, підставляючи media + caption + кнопку Назад
     media = InputMediaPhoto(media=img, caption=caption)
     bot.edit_message_media(
         media=media,
         chat_id=chat_id,
-        message_id=message_id
+        message_id=msg_id,
+        reply_markup=back_markup
     )
