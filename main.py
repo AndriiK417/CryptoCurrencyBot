@@ -11,7 +11,6 @@ from alerts_handler import show_alert_menu, start_add_alert, choose_coin, choose
 import notifications_handler
 from markups.period_markup    import period_markup
 from markups.price_changes_markup import price_changes_markup
-from markups.coins_markup import coins_markup
 from coins_handler       import coin_info_handler
 
 API_TOKEN = '6388083417:AAFnoBZpLQkrrF95Bj9uq0nYma5EUt9qs1k'
@@ -53,13 +52,6 @@ def chart_period_wrapper(call):
     chart_period_handler(call)
 
 # Монети
-
-# Текстова кнопка «Монети»
-@bot.message_handler(func=lambda m: m.text=='Монети')
-def coins_menu_wrapper(message):
-    bot.send_message(message.chat.id,
-                     "Оберіть монету:",
-                     reply_markup=coins_markup)
 
 # Inline-callback для «coininfo_<SYM>»
 @bot.callback_query_handler(func=lambda c: c.data.startswith('coininfo_'))
