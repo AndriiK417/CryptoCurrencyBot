@@ -7,6 +7,9 @@ from commands_handler import skip_price, skip_currency
 import period_changes_handler
 from markups.charts_markup import charts_markup, get_chart_period_markup
 from markups.period_markup import period_markup
+from telebot import types
+from markups.coins_markup import coins_markup
+from notifications_handler import bot
 
 API_TOKEN = '6388083417:AAFnoBZpLQkrrF95Bj9uq0nYma5EUt9qs1k'
 bot = telebot.TeleBot(API_TOKEN)
@@ -85,5 +88,17 @@ def handle_price_back_to_period(call, bot, period_markup):
         chat_id=call.message.chat.id,
         message_id=call.message.message_id,
         reply_markup=period_markup
+    )
+
+@bot.callback_query_handler(func=lambda c: c.data == 'coin_back_to_menu')
+def handle_coin_back_to_menu(call):
+    # 1) Видаляємо поточне медіа-повідомлення
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+
+    # 2) Надсилаємо нове текстове повідомлення з меню монет
+    bot.send_message(
+        call.message.chat.id,
+        "Оберіть монету:",
+        reply_markup=coins_markup
     )
 
