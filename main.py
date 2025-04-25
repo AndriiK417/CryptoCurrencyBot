@@ -60,12 +60,7 @@ def coininfo_wrapper(c):
 
 # Alerts
 
-# 1) Кнопка в основному меню "Alerts"
-@bot.message_handler(func=lambda m: m.text == 'Alerts')
-def show_alert_wrapper(message):
-    show_alert_menu(message)  # надсилає alert_menu_markup
-
-# 2) Обробка головного меню Alerts
+# Обробка головного меню Alerts
 @bot.callback_query_handler(func=lambda c: c.data == 'alert_add')
 def add_alert_wrapper(c):
     start_add_alert(c)        # крок 1: показує "Choose coin for alert"
