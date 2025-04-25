@@ -18,3 +18,7 @@ coins_markup.add(
     coin1, coin2, coin3, coin4, coin5, coin6, coin7, coin8, coin9, coin10
 )
 
+coins_markup.add(
+    types.InlineKeyboardButton('« Назад', callback_data='coins_back_to_menu')
+)
+
