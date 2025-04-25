@@ -1,6 +1,6 @@
 import telebot
 from telebot import types
-from inline_buttons_handler import handle_next_currency_button, handle_next_price_button, handle_previous_currency_button, handle_previous_price_button, handle_charts_back_to_coin, handle_price_back_to_period
+from inline_buttons_handler import handle_next_currency_button, handle_next_price_button, handle_previous_currency_button, handle_previous_price_button, handle_charts_back_to_coin, handle_price_back_to_period, handle_coin_back_to_menu
 from markups.charts_markup import charts_markup
 from commands_handler import commands_handler
 from charts_buttons_handler import charts_buttons_handler
@@ -130,6 +130,11 @@ def charts_back_coin_wrapper(c):
 @bot.callback_query_handler(func=lambda c: c.data == 'price_back_to_period')
 def price_back_period_wrapper(c):
     handle_price_back_to_period(c, bot, period_markup)
+
+# Монети: назад до вибору монети
+@bot.callback_query_handler(func=lambda c: c.data == 'coin_back_to_menu')
+def coin_back_menu_wrapper(c):
+    handle_coin_back_to_menu(c)
 
 @bot.message_handler(content_types='text')
 def commands_wrapper(message):
