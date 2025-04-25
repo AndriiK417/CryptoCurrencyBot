@@ -4,6 +4,7 @@ from markups.charts_markup import charts_markup
 from markups.currency_markup import currency_markup
 from markups.price_changes_markup import price_changes_markup
 from markups.period_markup import period_markup
+from markups.coins_markup import coins_markup
 
 API_TOKEN = '6388083417:AAFnoBZpLQkrrF95Bj9uq0nYma5EUt9qs1k'
 bot = telebot.TeleBot(API_TOKEN)
@@ -37,3 +38,7 @@ def commands_handler(message):
 
         elif message.text == 'Charts':
             bot.send_message(message.chat.id, "Choose the crypto-chart you need:", reply_markup=charts_markup)
+        
+        elif message.text == 'Монети':
+            bot.send_message(message.chat.id, "Оберіть монету:", reply_markup=coins_markup)
+
