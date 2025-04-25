@@ -1,5 +1,7 @@
 import requests
+from telebot import types
 from notifications_handler import bot
+from telebot.types import InputMediaPhoto
 
 # Відповідність SYMBOL → CoinLore id
 COIN_LORE_IDS = {
@@ -17,35 +19,38 @@ COIN_LORE_IDS = {
 
 CHARTS_KEY = 'qJX6lruQMB9Yhkj7ub87z3vrFa8z6hI13AgoaLdS'
 
-def coin_info_handler(call):
-    chat = call.message.chat.id
-    sym  = call.data.split('_',1)[1]  # наприклад 'BTC'
-    cid  = COIN_LORE_IDS.get(sym)
+def coin_info_handler(call: types.CallbackQuery):
+    chat_id    = call.message.chat.id
+    message_id = call.message.message_id
+    sym        = call.data.split('_',1)[1]   # напр. 'BTC'
+    cid        = COIN_LORE_IDS.get(sym)
     if not cid:
-        bot.send_message(chat, f"Не знайдено монету {sym}.")
+        bot.answer_callback_query(call.id, "Не знайдено монету.")
         return
 
     # 1) Дані з CoinLore
-    url = f'https://api.coinlore.net/api/ticker/?id={cid}'
+    url  = f'https://api.coinlore.net/api/ticker/?id={cid}'
     resp = requests.get(url)
     if resp.status_code != 200:
-        bot.send_message(chat, "Помилка API CoinLore.")
+        bot.answer_callback_query(call.id, "Помилка API.")
         return
     data = resp.json()[0]
-    price     = data['price_usd']
-    ch24      = data.get('percent_change_24h', 0)
-    ch7d      = data.get('percent_change_7d', 0)
-    vol24     = data.get('volume24', '—')
+    price  = data['price_usd']
+    ch24   = data.get('percent_change_24h', 0)
+    ch7d   = data.get('percent_change_7d', 0)
+    vol24  = data.get('volume24', '—')
 
     # 2) Графік за 1 день через Chart-Img
+    CHARTS_KEY = 'qJX6lruQMB9Yhkj7ub87z3vrFa8z6hI13AgoaLdS'
     chart_url = (
         f'https://api.chart-img.com/v1/tradingview/mini-chart'
         f'?key={CHARTS_KEY}'
-        f'&symbol=BINANCE:{sym}USD'   # BINANCE:BTCUSD etc.
+        f'&symbol=BINANCE:{sym}USD'
         f'&interval=1D&width=600&height=400&theme=light'
     )
     img = requests.get(chart_url).content
 
+    # 3) Формуємо підпис
     caption = (
         f"{data['name']} ({sym})\n\n"
         f"💲 Price: {price}$\n"
@@ -54,4 +59,10 @@ def coin_info_handler(call):
         f"🔄 24h Volume: {vol24}$"
     )
 
-    bot.send_photo(chat, img, caption=caption)
+    # 4) Редагуємо поточне повідомлення, вставляючи картинку + підпис
+    media = InputMediaPhoto(media=img, caption=caption)
+    bot.edit_message_media(
+        media=media,
+        chat_id=chat_id,
+        message_id=message_id
+    )
