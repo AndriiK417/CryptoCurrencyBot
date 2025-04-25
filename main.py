@@ -52,6 +52,20 @@ def charts_buttons_wrapper(call):
 def chart_period_wrapper(call):
     chart_period_handler(call)
 
+# Монети
+
+# Текстова кнопка «Монети»
+@bot.message_handler(func=lambda m: m.text=='Монети')
+def coins_menu_wrapper(message):
+    bot.send_message(message.chat.id,
+                     "Оберіть монету:",
+                     reply_markup=coins_markup)
+
+# Inline-callback для «coininfo_<SYM>»
+@bot.callback_query_handler(func=lambda c: c.data.startswith('coininfo_'))
+def coininfo_wrapper(c):
+    coin_info_handler(c)
+
 # Alerts
 
 # 1) Кнопка в основному меню "Alerts"
@@ -129,17 +143,7 @@ def price_back_period_wrapper(c):
 def commands_wrapper(message):
     commands_handler(message)
 
-# Текстова кнопка «Монети»
-@bot.message_handler(func=lambda m: m.text=='Монети')
-def coins_menu_wrapper(message):
-    bot.send_message(message.chat.id,
-                     "Оберіть монету:",
-                     reply_markup=coins_markup)
 
-# Inline-callback для «coininfo_<SYM>»
-@bot.callback_query_handler(func=lambda c: c.data.startswith('coininfo_'))
-def coininfo_wrapper(c):
-    coin_info_handler(c)
 
 bot.remove_webhook()
 
