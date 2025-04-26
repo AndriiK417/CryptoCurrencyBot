@@ -156,22 +156,3 @@ def schedule_alert(chat_id, symbol, direction, threshold, interval, mode='absolu
     user_jobs.setdefault(chat_id, []).append(job_id)
     return job_id
 
-def cancel_alert(chat_id: int, job_id: str):
-    """
-    Видаляє сповіщення за job_id та надсилає дружнє підтвердження.
-    """
-    try:
-        scheduler.remove_job(job_id)
-        user_jobs.get(chat_id, []).remove(job_id)
-        parts = job_id.split('_', 5)
-        if len(parts) == 6:
-            _, _, symbol, direction, threshold, _ = parts
-            bot.send_message(
-                chat_id,
-                f"🗑️ Alert removed: {symbol} {direction} {threshold}$"
-            )
-        else:
-            bot.send_message(chat_id, f"🗑️ Alert {job_id} removed.")
-    except Exception:
-        bot.send_message(chat_id, "⚠️ Не вдалося видалити сповіщення.")
-
