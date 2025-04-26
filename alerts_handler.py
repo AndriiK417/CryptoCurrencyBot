@@ -1,6 +1,6 @@
 from telebot import types
 import notifications_handler
-from notifications_handler import bot, user_jobs
+from notifications_handler import bot, scheduler, user_jobs
 from markups.alerts_markup import (
     alert_menu_markup,
     alert_coins_markup,
@@ -136,7 +136,7 @@ def choose_interval(call):
     bot.edit_message_text(
         "✅ Alert set:\n"
         f"{state['coin']} {state['direction']} {state['threshold']}{suffix}\n"
-        f"every {state['interval']}",
+        f"{state['interval']}",
         chat_id=chat,
         message_id=msg_id,
         reply_markup=None
@@ -210,17 +210,49 @@ def start_remove_alert(call):
         )
 
 
-def confirm_remove_alert(call):
-    """Крок 2: видалення alert і очищення кнопок"""
+def confirm_remove_alert(call: types.CallbackQuery):
+    """
+    Отримує job_id із callback_data = 'alert_rm_<job_id>',
+    одразу видаляє його зі scheduler і з user_jobs,
+    формує дружнє повідомлення та редагує/відправляє його.
+    """
     chat = call.message.chat.id
     msg_id = call.message.message_id
-    job_id = call.data.split('alert_rm_')[1]
-    notifications_handler.cancel_alert(chat_id=chat, job_id=job_id)
-    bot.edit_message_reply_markup(
-        chat_id=chat,
-        message_id=msg_id,
-        reply_markup=None
-    )
+
+    # дістаємо чистий job_id
+    job_id = call.data[len('alert_rm_'):]
+
+    # спарсимо дружній лейбл зі job_id (suffix % або $)
+    parts = job_id.split('_')
+    label = job_id
+    if len(parts) >= 7:
+        _, _, symbol, mode, direction, threshold, _ = parts[:7]
+        suffix = '%' if mode == 'percent' else '$'
+        label = f"{symbol} {direction} {threshold}{suffix}"
+
+    try:
+        # 1) видалити job із scheduler-а
+        scheduler.remove_job(job_id)
+        # 2) видалити job_id з user_jobs
+        if job_id in user_jobs.get(chat, []):
+            user_jobs[chat].remove(job_id)
+
+        # 3) підтвердження юзеру – редагуємо те саме повідомлення
+        bot.edit_message_text(
+            f"🗑️ Alert removed: {label}",
+            chat_id=chat,
+            message_id=msg_id,
+            reply_markup=None
+        )
+
+    except Exception as e:
+        # якщо щось не так — повідомимо про помилку й залишимо кнопки
+        bot.edit_message_text(
+            f"⚠️ Не вдалося видалити сповіщення:\n{e}",
+            chat_id=chat,
+            message_id=msg_id,
+            reply_markup=get_remove_alerts_markup(chat)
+        )
 
 def back_to_menu(call):
     chat = call.message.chat.id
