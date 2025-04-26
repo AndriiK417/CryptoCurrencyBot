@@ -56,25 +56,47 @@ def choose_coin(call):
 
 
 def choose_direction(call):
-    """Крок 3: введення порогу"""
-    chat = call.message.chat.id
+    chat   = call.message.chat.id
     msg_id = call.message.message_id
-    direction = call.data.split('_')[2]
-    state = user_state.get(chat, {})
-    state.update({'direction': direction, 'step': 'threshold', 'message_id': msg_id})
+    data   = call.data.split('_', 2)[2]  # 'above'|'below'|'pct'…
+    state = user_state.setdefault(chat, {})
+
+    # визначаємо режим
+    if data in ('above', 'below'):
+        state['mode'] = 'absolute'
+        prompt = "3️⃣ Enter threshold price in USD (e.g. 70000):"
+        callback_back = 'alert_back_to_direction'  # або 'alert_back_to_coin'
+    else:
+        # 'pct_up' або 'pct_down'
+        direction = 'up' if data=='pct_up' else 'down'
+        state['mode'] = 'percent'
+        state['direction'] = direction
+        prompt = "3️⃣ Enter threshold percent (e.g. 5 for 5%):"
+        callback_back = 'alert_back_to_direction'
+
+    state.update({
+        'direction': data if state['mode']=='absolute' else state['direction'],
+        'step':      'threshold',
+        'message_id': msg_id
+    })
+
+    # клавіатура з однією кнопкою «Назад»
+    back = types.InlineKeyboardMarkup()
+    back.add(types.InlineKeyboardButton('« Назад', callback_data=callback_back))
+
     bot.edit_message_text(
-        "3️⃣ Enter threshold price in USD (e.g. 70000):",
+        prompt,
         chat_id=chat,
         message_id=msg_id,
-        reply_markup=alert_threshold_markup
+        reply_markup=back
     )
 
 
 def receive_threshold(message):
     """Крок 4: отримання порогу та вибір інтервалу"""
     chat = message.chat.id
-    state = user_state.get(chat)
-    if not state or state.get('step') != 'threshold':
+    state = user_state.get(chat, {})
+    if state.get('step') != 'threshold':
         return False
     try:
         th = float(message.text)
@@ -107,11 +129,13 @@ def choose_interval(call):
         symbol=state['coin'],
         direction=state['direction'],
         threshold=state['threshold'],
-        interval=state['interval']
+        interval=state['interval'],
+        mode=state['mode']
     )
+    suffix = '%' if state.get('mode') == 'percent' else '$'
     bot.edit_message_text(
         "✅ Alert set:\n"
-        f"{state['coin']} {state['direction']} {state['threshold']}$\n"
+        f"{state['coin']} {state['direction']} {state['threshold']}{suffix}\n"
         f"every {state['interval']}",
         chat_id=chat,
         message_id=msg_id,
@@ -137,10 +161,12 @@ def list_alerts(call):
         return
     lines = []
     for job_id in jobs:
-        parts = job_id.split('_', 5)
-        if len(parts) == 6:
-            _, _, symbol, direction, threshold, _ = parts
-            lines.append(f"- {symbol} {direction} {threshold}$")
+        parts = job_id.split('_')
+        # тепер parts = ['alert', chat, symbol, mode, direction, threshold, interval]
+        if len(parts) >= 7:
+            _, _, symbol, mode, direction, threshold, _ = parts[:7]
+            suffix = '%' if mode == 'percent' else '$'
+            lines.append(f"- {symbol} {direction} {threshold}{suffix}")
         else:
             lines.append(f"- {job_id}")
     text = "Ваші сповіщення:\n" + "\n".join(lines)
@@ -221,9 +247,17 @@ def back_to_coin(call):
 def back_to_threshold(call):
     chat = call.message.chat.id
     msg_id = call.message.message_id
-    user_state[chat]['step'] = 'threshold'
+    state  = user_state.get(chat, {})
+
+    # Визначаємо, який саме prompt показати
+    mode = state.get('mode', 'absolute')
+    if mode == 'absolute':
+        prompt = "3️⃣ Enter threshold price in USD (e.g. 70000):"
+    else:  # percent
+        prompt = "3️⃣ Enter threshold percent (e.g. 5 for 5%):"
+    
     bot.edit_message_text(
-        "3️⃣ Enter threshold price in USD (e.g. 70000):",
+        prompt,
         chat_id=chat,
         message_id=msg_id,
         reply_markup=alert_threshold_markup
