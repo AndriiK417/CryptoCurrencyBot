@@ -28,6 +28,8 @@ alert_direction_markup = types.InlineKeyboardMarkup(row_width=2)
 alert_direction_markup.add(
     types.InlineKeyboardButton('🔼 Above', callback_data='alert_dir_above'),
     types.InlineKeyboardButton('🔽 Below', callback_data='alert_dir_below'),
+    types.InlineKeyboardButton('📈 % up',    callback_data='alert_dir_pct_up'),
+    types.InlineKeyboardButton('📉 % down',  callback_data='alert_dir_pct_down'),
 )
 alert_direction_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_coin'))
 
@@ -53,15 +55,17 @@ def get_remove_alerts_markup(chat_id: int) -> types.InlineKeyboardMarkup:
     """
     markup = types.InlineKeyboardMarkup(row_width=1)
     for job_id in user_jobs.get(chat_id, []):
-        parts = job_id.split('_', 5)
-        if len(parts) == 6:
-            _, _, symbol, direction, threshold, _ = parts
-            label = f"{symbol} {direction} {threshold}$"
+        parts = job_id.split('_')
+        if len(parts) >= 7:
+            _, _, symbol, mode, direction, threshold, _ = parts[:7]
+            suffix = '%' if mode == 'percent' else '$'
+            label = f"{symbol} {direction} {threshold}{suffix}"
         else:
             label = job_id
         markup.add(
             types.InlineKeyboardButton(label, callback_data=f'alert_rm_{job_id}')
         )
+
     markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_menu'))
     return markup
 
