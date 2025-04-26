@@ -110,61 +110,41 @@ def set_alert(message):
         f"{symbol} {direction} {threshold}$ кожні {interval}."
     )
 
-def list_alerts(message):
-    """Виводить список активних сповіщень дружнім текстом."""
-    jobs = user_jobs.get(message.chat.id, [])
-    if not jobs:
-        bot.send_message(message.chat.id, "У вас немає активних сповіщень.")
-        return
-    lines = []
-    for job_id in jobs:
-        parts = job_id.split('_', 5)
-        if len(parts) == 6:
-            _, _, symbol, direction, threshold, _ = parts
-            lines.append(f"- {symbol} {direction} {threshold}$")
-        else:
-            lines.append(f"- {job_id}")
-    text = "Ваші сповіщення:\n" + "\n".join(lines)
-    bot.send_message(message.chat.id, text)
 
-def remove_alert(message):
-    """
-    Очікує команду:
-    /remove_alert <job_id>
-    """
-    parts = message.text.split(maxsplit=1)
-    if len(parts) != 2:
-        bot.send_message(message.chat.id, "Використання: /remove_alert <job_id>")
-        return
-    job_id = parts[1].strip()
-    try:
-        scheduler.remove_job(job_id)
-        user_jobs[message.chat.id].remove(job_id)
-        bot.send_message(message.chat.id, f"Сповіщення {job_id} видалено.")
-    except Exception:
-        bot.send_message(message.chat.id, f"Не вдалося видалити {job_id}.")
-
-def schedule_alert(chat_id, symbol, direction, threshold, interval):
+def schedule_alert(chat_id, symbol, direction, threshold, interval, mode='absolute'):
     """
     Створює job і повертає job_id.
     """
-    job_id = f"alert_{chat_id}_{symbol}_{direction}_{threshold}_{interval}"
+    job_id = f"alert_{chat_id}_{symbol}_{mode}_{direction}_{threshold}_{interval}"
     # видаляємо старий, якщо є
     try: scheduler.remove_job(job_id)
     except: pass
 
+    # для percent — зафіксуємо базову ціну
+    base_price = None
+    if mode=='percent':
+        base_price = fetch_price(symbol)
+
     def job_func():
         price = fetch_price(symbol)
-        if price is None: 
-            bot.send_message(chat_id, f"Coin {symbol} not found.")
-            return
-        cond = (direction=='above' and price>threshold) or \
-               (direction=='below' and price< threshold)
+        if price is None: return
+
+        cond = False
+        if mode=='absolute':
+            cond = (direction=='above' and price>threshold) or (direction=='below' and price<threshold)
+        else:  # percent
+            if base_price:
+                change = (price - base_price)/base_price*100
+                cond = (direction=='up'   and change>=threshold) or \
+                       (direction=='down' and change<=-threshold)
         if cond:
-            bot.send_message(chat_id,
-                f"🔔 {symbol} is now {price}$, "
-                f"{'above' if direction=='above' else 'below'} {threshold}$"
+            bot.send_message(
+                chat_id,
+                f"🔔 {symbol} зараз {price}$ | "
+                + (f"{round(change,2)}%" if mode=='percent' else f"{price}$")
             )
+            # якщо alert одноразовий — прибрати job:
+            # scheduler.remove_job(job_id)
     # розклад
     if interval == 'minutely':
         scheduler.add_job(job_func, 'interval', minutes=1, id=job_id)
