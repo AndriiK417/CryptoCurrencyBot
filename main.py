@@ -2,9 +2,8 @@ import telebot
 from telebot import types
 from inline_buttons_handler import handle_next_currency_button, handle_next_price_button, handle_previous_currency_button, handle_previous_price_button, handle_charts_back_to_coin, handle_price_back_to_period, handle_coin_back_to_menu
 from markups.charts_markup import charts_markup
-from commands_handler import commands_handler
+from commands_handler import commands_handler, start
 from charts_buttons_handler import charts_buttons_handler
-from markups.markup import markup
 from period_changes_handler import period_changes_handler, chart_period_handler
 import requests
 from alerts_handler import show_alert_menu, start_add_alert, choose_coin, choose_direction, receive_threshold, choose_interval, list_alerts, start_remove_alert, confirm_remove_alert, back_to_menu, back_to_coin, back_to_threshold, back_to_direction
@@ -18,8 +17,8 @@ API_TOKEN = '6388083417:AAFnoBZpLQkrrF95Bj9uq0nYma5EUt9qs1k'
 bot = telebot.TeleBot(API_TOKEN)
 
 @bot.message_handler(commands=['start'])
-def start(message):
-    bot.send_message(message.chat.id, 'Hi, {0.first_name}'.format(message.from_user), reply_markup=markup)
+def start_wrapper(call):
+    start(call)
           
 @bot.callback_query_handler(func=lambda call: call.data.startswith('previous_currency'))
 def previous_currency_wrapper(call):
