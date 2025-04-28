@@ -4,9 +4,7 @@ from notifications_handler import bot, scheduler, user_jobs
 from markups.alerts_markup import (
     alert_menu_markup,
     alert_coins_markup,
-    alert_type_markup,
-    alert_direction_price_markup,
-    alert_direction_percent_markup,
+    alert_direction_markup,
     alert_threshold_markup,
     alert_interval_markup,
     get_remove_alerts_markup
@@ -42,65 +40,49 @@ def start_add_alert(call):
     )
 
 
-def choose_coin(call: types.CallbackQuery):
-    """2️⃣ Після вибору монети — вибір метрики: price або percent"""
-    chat   = call.message.chat.id
+def choose_coin(call):
+    """Крок 2: вибір напрямку"""
+    chat = call.message.chat.id
     msg_id = call.message.message_id
-    symbol = call.data.split('_',2)[2]  # alert_coin_BTCUSD → BTCUSD
-
-    st = user_state[chat]
-    st.update({'coin': symbol, 'step': 'type'})
-
+    sym = call.data.split('_', 2)[2]
+    state = user_state.get(chat, {})
+    state.update({'coin': sym, 'step': 'direction', 'message_id': msg_id})
     bot.edit_message_text(
-        f"2️⃣ {symbol}: Choose alert type",
+        f"2️⃣ {sym}: Above or Below?",
         chat_id=chat,
         message_id=msg_id,
-        reply_markup=alert_type_markup
-    )
-
-
-def choose_type(call: types.CallbackQuery):
-    """3️⃣ Вибір метрики → price чи percent, потім direction"""
-    chat   = call.message.chat.id
-    msg_id = call.message.message_id
-    mode   = call.data.split('_',2)[2]  # 'price' або 'percent'
-
-    st = user_state[chat]
-    st.update({'mode': mode, 'step': 'direction'})
-
-    # вибираємо потрібний markup
-    if mode == 'price':
-        direction_markup = alert_direction_price_markup
-        title = "Price alert: Above or Below $?"
-    else:
-        direction_markup = alert_direction_percent_markup
-        title = "Percent alert: ▲ or ▼ %?"
-
-    # Змінюємо текст і клавіатуру на direction-menu
-    bot.edit_message_text(
-        f"3️⃣ {title}",
-        chat_id=chat,
-        message_id=msg_id,
-        reply_markup=direction_markup
+        reply_markup=alert_direction_markup
     )
 
 
 def choose_direction(call):
     chat   = call.message.chat.id
     msg_id = call.message.message_id
-    direction = call.data.split('_',2)[2]  # 'above' чи 'below'
+    data   = call.data.split('_', 2)[2]  # 'above'|'below'|'pct'…
+    state = user_state.setdefault(chat, {})
 
-    state = user_state[chat]
-    state.update({'direction': direction, 'step': 'threshold'})
+    # визначаємо режим
+    if data in ('above', 'below'):
+        state['mode'] = 'absolute'
+        prompt = "3️⃣ Enter threshold price in USD (e.g. 70000):"
+        callback_back = 'alert_back_to_direction'  # або 'alert_back_to_coin'
+    else:
+        # 'pct_up' або 'pct_down'
+        direction = 'up' if data=='pct_up' else 'down'
+        state['mode'] = 'percent'
+        state['direction'] = direction
+        prompt = "3️⃣ Enter threshold percent (e.g. 5 for 5%):"
+        callback_back = 'alert_back_to_direction'
 
-    # Виводимо prompt для threshold
-    prompt = ("4️⃣ Enter threshold price in USD (e.g. 70000):"
-              if state['mode']=='price'
-              else "4️⃣ Enter threshold percent (e.g. 5 for 5%):")
+    state.update({
+        'direction': data if state['mode']=='absolute' else state['direction'],
+        'step':      'threshold',
+        'message_id': msg_id
+    })
 
     # клавіатура з однією кнопкою «Назад»
     back = types.InlineKeyboardMarkup()
-    back.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_direction'))
+    back.add(types.InlineKeyboardButton('« Назад', callback_data=callback_back))
 
     bot.edit_message_text(
         prompt,
@@ -294,28 +276,6 @@ def back_to_coin(call):
         reply_markup=alert_coins_markup
     )
 
-def back_to_type(call):
-    """
-    Повернення на крок вибору метрики (price або percent)
-    """
-    chat   = call.message.chat.id
-    msg_id = call.message.message_id
-    state  = user_state.get(chat, {})
-
-    # Якщо монету вже вибрали — дістаємо її для заголовка
-    coin = state.get('coin', 'your coin')
-
-    # Редагуємо те саме повідомлення
-    bot.edit_message_text(
-        f"2️⃣ {coin}: Choose alert type",
-        chat_id=chat,
-        message_id=msg_id,
-        reply_markup=alert_type_markup
-    )
-
-    # Оновлюємо FSM-стан
-    state['step'] = 'type'
-
 def back_to_threshold(call):
     chat = call.message.chat.id
     msg_id = call.message.message_id
@@ -336,32 +296,17 @@ def back_to_threshold(call):
     )
 
 def back_to_direction(call):
-    """
-    Повернення на крок вибору напрямку:
-    – якщо mode=='price' → клавіатура з “🔼 Above $”/“🔽 Below $”
-    – якщо mode=='percent' → клавіатура з “📈 ▲ %”/“📉 ▼ %”
-    """
-    chat   = call.message.chat.id
+    """Повернення до вибору direction (After coin selected)"""
+    chat = call.message.chat.id
     msg_id = call.message.message_id
-    state  = user_state.get(chat, {})
-
-    # Дістаємо поточний режим ('price' або 'percent')
-    mode = state.get('mode', 'price')
+    # user_state[chat]['step'] = 'direction'
+    state = user_state.get(chat)
     coin = state.get('coin', 'your coin')
-
-    if mode == 'price':
-        direction_markup    = alert_direction_price_markup
-        title     = f"3️⃣ {coin}: Price alert – Above or Below $?"
-    else:
-        direction_markup    = alert_direction_percent_markup
-        title     = f"3️⃣ {coin}: Percent alert – ▲ or ▼ %?"
-
-    # Редагуємо повідомлення з відповідними кнопками
+    # Заново показати вибір direction
     bot.edit_message_text(
-        title,
+        f"2️⃣ {coin}: Above or Below?",
         chat_id=chat,
         message_id=msg_id,
-        reply_markup=direction_markup
+        reply_markup=alert_direction_markup
     )
     # state['step'] = 'direction'
-
