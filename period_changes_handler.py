@@ -1,6 +1,8 @@
 import telebot
 import requests
+from telebot.types import InputMediaPhoto
 from notifications_handler import bot
+from markups.charts_markup import get_chart_period_markup
 from markups.price_changes_markup import price_changes_markup
 
 API_TOKEN = '6388083417:AAFnoBZpLQkrrF95Bj9uq0nYma5EUt9qs1k'
@@ -44,19 +46,30 @@ def period_changes_handler(call):
 
 
 def chart_period_handler(call):
-    # call.data: 'chart_<COIN>_<INTERVAL>'
+    chat_id    = call.message.chat.id
+    message_id = call.message.message_id
+    # форматуємо: 'chart_BTCUSD_1D'
     _, coin, interval = call.data.split('_', 2)
+
+    # Робимо запит до Chart-Img
     CHARTS_API_LINK = (
         f'https://api.chart-img.com/v1/tradingview/mini-chart'
         f'?key=qJX6lruQMB9Yhkj7ub87z3vrFa8z6hI13AgoaLdS'
         f'&symbol=BINANCE:{coin}'
-        f'&width=600&height=400'
         f'&interval={interval}'
+        f'&width=600&height=400'
         f'&theme=light'
     )
     resp = requests.get(CHARTS_API_LINK)
-    if resp.status_code == 200:
-        bot.send_photo(call.message.chat.id, resp.content)
-    else:
-        bot.send_message(call.message.chat.id, "Не вдалося завантажити графік. Спробуйте пізніше.")
+    if resp.status_code != 200:
+        bot.answer_callback_query(call.id, "Не вдалося завантажити графік.")
+        return
 
+    # Створюємо media із контенту та редагуємо повідомлення
+    media = InputMediaPhoto(media=resp.content)
+    bot.edit_message_media(
+        media=media,
+        chat_id=chat_id,
+        message_id=message_id,
+        reply_markup=get_chart_period_markup(coin)  # клавіатура з 1D,1M,3M,1Y + «Назад»
+    )
