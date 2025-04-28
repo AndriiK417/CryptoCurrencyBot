@@ -6,7 +6,7 @@ from commands_handler import commands_handler, start
 from charts_buttons_handler import charts_buttons_handler
 from period_changes_handler import period_changes_handler, chart_period_handler
 import requests
-from alerts_handler import show_alert_menu, start_add_alert, choose_coin, choose_direction, receive_threshold, choose_interval, list_alerts, start_remove_alert, confirm_remove_alert, back_to_menu, back_to_coin, back_to_threshold, back_to_direction, choose_type, back_to_type
+from alerts_handler import show_alert_menu, start_add_alert, choose_coin, choose_direction, receive_threshold, choose_interval, list_alerts, start_remove_alert, confirm_remove_alert, back_to_menu, back_to_coin, back_to_threshold, back_to_direction
 import notifications_handler
 from markups.period_markup    import period_markup
 from markups.price_changes_markup import price_changes_markup
@@ -82,10 +82,6 @@ def confirm_remove_alert_wrapper(c):
 def alert_coin_wrapper(c):
     choose_coin(c)
 
-@bot.callback_query_handler(func=lambda c: c.data.startswith('alert_type_'))
-def alert_type_wrapper(c):
-    choose_type(c)
-
 #   b) вибір напрямку (above/below)
 @bot.callback_query_handler(func=lambda c: c.data.startswith('alert_dir_'))
 def alert_direction_wrapper(c):
@@ -111,10 +107,6 @@ def alert_back_menu_wrapper(c):
 def alert_back_coin_wrapper(c):
     back_to_coin(c)
 
-@bot.callback_query_handler(func=lambda c: c.data == 'alert_back_to_type')
-def alert_back_metric_wrapper(c):
-    back_to_type(c)
-
 @bot.callback_query_handler(func=lambda c: c.data=='alert_back_to_threshold')
 def alert_back_threshold_wrapper(c):
     back_to_threshold(c)
@@ -126,7 +118,7 @@ def alert_back_direction_wrapper(c):
 # Charts: назад до вибору монети
 @bot.callback_query_handler(func=lambda c: c.data.startswith('charts_back_to_coin_'))
 def charts_back_coin_wrapper(c):
-    handle_charts_back_to_coin(c, bot, charts_markup)
+    handle_charts_back_to_coin(c)
 
 # Price changes: назад до вибору періоду
 @bot.callback_query_handler(func=lambda c: c.data == 'price_back_to_period')
