@@ -23,37 +23,21 @@ alert_coins_markup.add(
 )
 alert_coins_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_menu'))
 
-# 3) вибір метрики — “price” або “percent”
-alert_type_markup = types.InlineKeyboardMarkup(row_width=2)
-alert_type_markup.add(
-    types.InlineKeyboardButton('💲 Change in $',     callback_data='alert_type_price'),
-    types.InlineKeyboardButton('📊 Change in %', callback_data='alert_type_percent'),
-)
-# додамо кнопку «Назад» до вибору монети
-alert_type_markup.add(
-    types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_coin')
-)
-
-# 4) Вибір напрямку
-alert_direction_price_markup = types.InlineKeyboardMarkup(row_width=2)
-alert_direction_price_markup.add(
-    types.InlineKeyboardButton('🔼 Above', callback_data='alert_dir_prc_above'),
-    types.InlineKeyboardButton('🔽 Below', callback_data='alert_dir_prc_below'),
-)
-alert_direction_price_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_type'))
-
-alert_direction_percent_markup = types.InlineKeyboardMarkup(row_width=2)
-alert_direction_percent_markup.add(
+# 3) Вибір напрямку
+alert_direction_markup = types.InlineKeyboardMarkup(row_width=2)
+alert_direction_markup.add(
+    types.InlineKeyboardButton('🔼 Above', callback_data='alert_dir_above'),
+    types.InlineKeyboardButton('🔽 Below', callback_data='alert_dir_below'),
     types.InlineKeyboardButton('📈 % up',    callback_data='alert_dir_pct_up'),
     types.InlineKeyboardButton('📉 % down',  callback_data='alert_dir_pct_down'),
 )
-alert_direction_percent_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_type'))
+alert_direction_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_coin'))
 
-# 5) Вибір threshold
+# Вибір threshold
 alert_threshold_markup = types.InlineKeyboardMarkup(row_width=2)
 alert_threshold_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_direction'))
 
-# 6) Вибір інтервалу
+# 4) Вибір інтервалу
 alert_interval_markup = types.InlineKeyboardMarkup(row_width=2)
 alert_interval_markup.add(
     types.InlineKeyboardButton('1 minute', callback_data='alert_int_minutely'),
@@ -62,7 +46,7 @@ alert_interval_markup.add(
 )
 alert_interval_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_threshold'))
 
-# Меню видалення alert-ів
+# 5) Меню видалення alert-ів
 def get_remove_alerts_markup(chat_id: int) -> types.InlineKeyboardMarkup:
     """
     Повертає InlineKeyboardMarkup, в якому кожен alert — окрема кнопка з дружнім
@@ -84,4 +68,3 @@ def get_remove_alerts_markup(chat_id: int) -> types.InlineKeyboardMarkup:
 
     markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_menu'))
     return markup
-
