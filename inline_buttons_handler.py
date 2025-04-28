@@ -72,11 +72,13 @@ def handle_next_price_button(call):
     )
     bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=price_changes_markup)
 
-def handle_charts_back_to_coin(call, bot, charts_markup):
-    bot.edit_message_text(
+def handle_charts_back_to_coin(call):
+    
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+    
+    bot.send_message(
+        call.message.chat.id,
         "Choose the crypto-chart you need:",
-        chat_id=call.message.chat.id,
-        message_id=call.message.message_id,
         reply_markup=charts_markup
     )
 
