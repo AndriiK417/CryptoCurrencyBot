@@ -49,9 +49,9 @@ def coin_info_handler(call: types.CallbackQuery):
     # 3) Формуємо підпис
     caption = (
         f"{data['name']} ({sym})\n\n"
-        f"💲 Price: {price}$\n"
-        f"📈 24h: {round(float(ch24),2)}%\n"
-        f"📈 7d:  {round(float(ch7d),2)}%\n"
+        f"💲 Ціна: {price}$\n"
+        f"📈 Зміна за 24 год: {round(float(ch24),2)}%\n"
+        f"📈 Зміна за 7 дн:  {round(float(ch7d),2)}%\n"
         f"🔄 24h Volume: {vol24}$"
     )
 
