@@ -20,7 +20,7 @@ def show_alert_menu(message):
     """
     sent = bot.send_message(
         message.chat.id,
-        "🔔 Alerts menu:",
+        "🔔 Виберіть опцію:",
         reply_markup=alert_menu_markup
     )
     # Зберігаємо message_id, щоб можна було редагувати
@@ -33,7 +33,7 @@ def start_add_alert(call):
     msg_id = call.message.message_id
     user_state[chat].update({'step': 'coin', 'message_id': msg_id})
     bot.edit_message_text(
-        "1️⃣ Choose coin for alert:",
+        "1️⃣ Виберіть валюту для сповіщення:",
         chat_id=chat,
         message_id=msg_id,
         reply_markup=alert_coins_markup
@@ -48,7 +48,7 @@ def choose_coin(call):
     state = user_state.get(chat, {})
     state.update({'coin': sym, 'step': 'direction', 'message_id': msg_id})
     bot.edit_message_text(
-        f"2️⃣ {sym}: Above or Below?",
+        f"2️⃣ {sym}: Зміна ціни: позитивна чи негативна?",
         chat_id=chat,
         message_id=msg_id,
         reply_markup=alert_direction_markup
@@ -64,14 +64,14 @@ def choose_direction(call):
     # визначаємо режим
     if data in ('above', 'below'):
         state['mode'] = 'absolute'
-        prompt = "3️⃣ Enter threshold price in USD (e.g. 70000):"
+        prompt = "3️⃣ Введіть поріг ціни в USD (наприклад, 70000):"
         callback_back = 'alert_back_to_direction'  # або 'alert_back_to_coin'
     else:
         # 'pct_up' або 'pct_down'
         direction = 'up' if data=='pct_up' else 'down'
         state['mode'] = 'percent'
         state['direction'] = direction
-        prompt = "3️⃣ Enter threshold percent (e.g. 5 for 5%):"
+        prompt = "3️⃣ Введіть поріг ціни у відсотках (наприклад, 5 для 5%):"
         callback_back = 'alert_back_to_direction'
 
     state.update({
@@ -108,7 +108,7 @@ def receive_threshold(message):
     state.update({'threshold': th, 'step': 'interval'})
     msg_id = state.get('message_id')
     bot.edit_message_text(
-        "4️⃣ Choose check interval:",
+        "4️⃣ ВИберіть частоту перевірки перетину порогу:",
         chat_id=chat,
         message_id=msg_id,
         reply_markup=alert_interval_markup
@@ -134,7 +134,7 @@ def choose_interval(call):
     )
     suffix = '%' if state.get('mode') == 'percent' else '$'
     bot.edit_message_text(
-        "✅ Alert set:\n"
+        "✅ Сповіщення встановлено:\n"
         f"{state['coin']} {state['direction']} {state['threshold']}{suffix}\n"
         f"{state['interval']}",
         chat_id=chat,
@@ -239,7 +239,7 @@ def confirm_remove_alert(call: types.CallbackQuery):
 
         # 3) підтвердження юзеру – редагуємо те саме повідомлення
         bot.edit_message_text(
-            f"🗑️ Alert removed: {label}",
+            f"🗑️ Сповіщення видалено: {label}",
             chat_id=chat,
             message_id=msg_id,
             reply_markup=None
@@ -259,7 +259,7 @@ def back_to_menu(call):
     msg_id = call.message.message_id
     user_state[chat]['step'] = 'menu'
     bot.edit_message_text(
-        "🔔 Alerts menu:",
+        "🔔 Виберіть опцію:",
         chat_id=chat,
         message_id=msg_id,
         reply_markup=alert_menu_markup
@@ -270,7 +270,7 @@ def back_to_coin(call):
     msg_id = call.message.message_id
     user_state[chat]['step'] = 'coin'
     bot.edit_message_text(
-        "1️⃣ Choose coin for alert:",
+        "1️⃣ Виберіть монету для сповіщення:",
         chat_id=chat,
         message_id=msg_id,
         reply_markup=alert_coins_markup
@@ -284,9 +284,9 @@ def back_to_threshold(call):
     # Визначаємо, який саме prompt показати
     mode = state.get('mode', 'absolute')
     if mode == 'absolute':
-        prompt = "3️⃣ Enter threshold price in USD (e.g. 70000):"
+        prompt = "3️⃣ Введіть поріг ціни в USD (наприклад, 70000):"
     else:  # percent
-        prompt = "3️⃣ Enter threshold percent (e.g. 5 for 5%):"
+        prompt = "3️⃣ Введіть поріг у відсотках (наприклад, 5 для 5%):"
     
     bot.edit_message_text(
         prompt,
@@ -304,7 +304,7 @@ def back_to_direction(call):
     coin = state.get('coin', 'your coin')
     # Заново показати вибір direction
     bot.edit_message_text(
-        f"2️⃣ {coin}: Above or Below?",
+        f"2️⃣ {coin}: Зміна ціни: позитивна чи негативна?",
         chat_id=chat,
         message_id=msg_id,
         reply_markup=alert_direction_markup
