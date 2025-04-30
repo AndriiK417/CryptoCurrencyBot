@@ -4,9 +4,9 @@ from notifications_handler import user_jobs
 # 1) Головне меню Alerts
 alert_menu_markup = types.InlineKeyboardMarkup(row_width=2)
 alert_menu_markup.add(
-    types.InlineKeyboardButton('➕ Add Alert',    callback_data='alert_add'),
-    types.InlineKeyboardButton('📋 List Alerts',  callback_data='alert_list'),
-    types.InlineKeyboardButton('❌ Remove Alert', callback_data='alert_remove'),
+    types.InlineKeyboardButton('➕ Створити сповіщення',    callback_data='alert_add'),
+    types.InlineKeyboardButton('📋 Список сповіщень',  callback_data='alert_list'),
+    types.InlineKeyboardButton('❌ Видалити сповіщення', callback_data='alert_remove'),
 )
 
 # 2) Вибір монети
@@ -26,10 +26,10 @@ alert_coins_markup.add(types.InlineKeyboardButton('« Назад', callback_data
 # 3) Вибір напрямку
 alert_direction_markup = types.InlineKeyboardMarkup(row_width=2)
 alert_direction_markup.add(
-    types.InlineKeyboardButton('🔼 Above', callback_data='alert_dir_above'),
-    types.InlineKeyboardButton('🔽 Below', callback_data='alert_dir_below'),
-    types.InlineKeyboardButton('📈 % up',    callback_data='alert_dir_pct_up'),
-    types.InlineKeyboardButton('📉 % down',  callback_data='alert_dir_pct_down'),
+    types.InlineKeyboardButton('🔼 Вище за $', callback_data='alert_dir_above'),
+    types.InlineKeyboardButton('🔽 Нижче за $', callback_data='alert_dir_below'),
+    types.InlineKeyboardButton('📈 Вгору на %',    callback_data='alert_dir_pct_up'),
+    types.InlineKeyboardButton('📉 Вниз на %',  callback_data='alert_dir_pct_down'),
 )
 alert_direction_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_coin'))
 
@@ -40,9 +40,9 @@ alert_threshold_markup.add(types.InlineKeyboardButton('« Назад', callback_
 # 4) Вибір інтервалу
 alert_interval_markup = types.InlineKeyboardMarkup(row_width=2)
 alert_interval_markup.add(
-    types.InlineKeyboardButton('1 minute', callback_data='alert_int_minutely'),
-    types.InlineKeyboardButton('1 Hour', callback_data='alert_int_hourly'),
-    types.InlineKeyboardButton('1 Day',  callback_data='alert_int_daily'),
+    types.InlineKeyboardButton('1 хвилина', callback_data='alert_int_minutely'),
+    types.InlineKeyboardButton('1 година', callback_data='alert_int_hourly'),
+    types.InlineKeyboardButton('1 день',  callback_data='alert_int_daily'),
 )
 alert_interval_markup.add(types.InlineKeyboardButton('« Назад', callback_data='alert_back_to_threshold'))
 
