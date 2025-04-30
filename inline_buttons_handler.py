@@ -78,7 +78,7 @@ def handle_charts_back_to_coin(call):
     
     bot.send_message(
         call.message.chat.id,
-        "Choose the crypto-chart you need:",
+        "Для якої монети показати графік?",
         reply_markup=charts_markup
     )
 
@@ -86,7 +86,7 @@ def handle_charts_back_to_coin(call):
 def handle_price_back_to_period(call, bot, period_markup):
     # того ж message, просто повернути клавіатуру price_changes_markup?
     bot.edit_message_text(
-        "Choose period:",
+        "Виберіть період:",
         chat_id=call.message.chat.id,
         message_id=call.message.message_id,
         reply_markup=period_markup
